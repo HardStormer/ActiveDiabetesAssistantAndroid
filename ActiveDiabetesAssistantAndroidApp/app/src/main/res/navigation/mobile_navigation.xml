@@ -13,13 +13,13 @@
 
     <fragment
         android:id="@+id/nav_gallery"
-        android:name="com.example.activediabetesassistantandroidapp.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
+        android:name="com.example.activediabetesassistantandroidapp.ui.gallery.GlucoseInfoCreateFragment"
+        android:label="@string/menu_glucose_info_create"
+        tools:layout="@layout/fragment_glucose_info_create" />
 
     <fragment
         android:id="@+id/nav_slideshow"
-        android:name="com.example.activediabetesassistantandroidapp.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:name="com.example.activediabetesassistantandroidapp.ui.slideshow.PersonInfoUpdateFragment"
+        android:label="@string/menu_person_info_update"
+        tools:layout="@layout/fragment_person_info_update" />
 </navigation>

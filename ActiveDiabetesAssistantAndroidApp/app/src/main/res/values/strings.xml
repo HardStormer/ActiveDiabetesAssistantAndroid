@@ -7,7 +7,10 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
-    <string name="menu_home">Home</string>
-    <string name="menu_gallery">Gallery</string>
-    <string name="menu_slideshow">Slideshow</string>
+    <string name="glucose_data_submit_button_text">Сохранить</string>
+    <string name="steps_data_description">Количество шагов</string>
+    <string name="glucose_data_description">Уровень глюкозы</string>
+    <string name="menu_home">Главная</string>
+    <string name="menu_glucose_info_create">Данные глюкозы</string>
+    <string name="menu_person_info_update">Личные данные</string>
 </resources>
