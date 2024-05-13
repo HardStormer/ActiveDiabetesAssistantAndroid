@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    kotlin("plugin.serialization") version "1.7.10"
+//    kotlin("plugin.serialization") version "1.7.10"
 }
 
 android {
@@ -52,6 +52,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.navigation:navigation-compose:2.4.0-beta02")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:latest")
     implementation("io.ktor:ktor-client-core:2.3.11")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.11")

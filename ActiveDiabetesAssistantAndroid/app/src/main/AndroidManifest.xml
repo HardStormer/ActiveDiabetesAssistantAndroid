@@ -24,9 +24,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".GlucoseLevelsActivity" />
-        <activity android:name=".UserProfileActivity" />
-        <activity android:name=".WorkoutTimeActivity" />
+        <activity android:name=".pages.GlucoseLevelsActivity" />
+        <activity android:name=".pages.UserProfileActivity" />
+        <activity android:name=".pages.WorkoutTimeActivity" />
     </application>
 
 </manifest>

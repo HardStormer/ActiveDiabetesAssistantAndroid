@@ -1,4 +1,4 @@
-package ru.guzeevmd.activediabetesassistant
+package ru.guzeevmd.activediabetesassistant.pages
 
 import android.os.Bundle
 import android.widget.LinearLayout
