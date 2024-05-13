@@ -23,6 +23,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".GlucoseLevelsActivity" />
+        <activity android:name=".UserProfileActivity" />
+        <activity android:name=".WorkoutTimeActivity" />
     </application>
 
 </manifest>
