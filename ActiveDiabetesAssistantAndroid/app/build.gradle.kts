@@ -1,11 +1,13 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    kotlin("plugin.serialization") version "1.7.10"
 }
 
 android {
     namespace = "ru.guzeevmd.activediabetesassistant"
     compileSdk = 34
+
 
     defaultConfig {
         applicationId = "ru.guzeevmd.activediabetesassistant"
@@ -50,9 +52,14 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:latest")
+    implementation("io.ktor:ktor-client-core:2.3.11")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.11")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.11")
     implementation("androidx.appcompat:appcompat:1.3.1")
     implementation("com.google.android.material:material:1.4.0")
     implementation("androidx.constraintlayout:constraintlayout:2.0.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 //    implementation(libs.androidx.appcompat)
 //    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
@@ -64,6 +71,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.transport.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -7,7 +7,12 @@ import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.ArrayAdapter
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.runtime.Composable
 import androidx.core.view.setPadding
+import ru.guzeevmd.activediabetesassistant.activities.DrawerContent
 
 class UserProfileActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
