@@ -4,6 +4,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class ListResponse<T>(
+    val modelList: Collection<T>,
+    val totalCount: Int
+)
+
+@Serializable
 data class CreateGlucoseInfoCommand(
     val glucoseData: Int,
     val stepsCount: Int?

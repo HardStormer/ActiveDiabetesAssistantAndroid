@@ -2,7 +2,7 @@ package ru.guzeevmd.activediabetesassistant.activities
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.List
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class BottomNavigationItem(
@@ -13,17 +13,17 @@ data class BottomNavigationItem(
     fun bottomNavigationItems() : List<BottomNavigationItem> {
         return listOf(
             BottomNavigationItem(
-                label = "Home",
+                label = "Начало",
                 icon = Icons.Filled.Home,
                 route = Screens.Home.route
             ),
             BottomNavigationItem(
-                label = "Search",
-                icon = Icons.Filled.Search,
-                route = Screens.Search.route
+                label = "Список записей",
+                icon = Icons.Filled.List,
+                route = Screens.GlucoseLevels.route
             ),
             BottomNavigationItem(
-                label = "Profile",
+                label = "Профиль",
                 icon = Icons.Filled.AccountCircle,
                 route = Screens.Profile.route
             ),

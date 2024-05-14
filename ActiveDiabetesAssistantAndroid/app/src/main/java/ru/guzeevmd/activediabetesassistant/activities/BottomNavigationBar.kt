@@ -14,9 +14,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import ru.guzeevmd.activediabetesassistant.screens.GlucoseLevelsScreen
 import ru.guzeevmd.activediabetesassistant.screens.HomeScreen
 import ru.guzeevmd.activediabetesassistant.screens.ProfileScreen
-import ru.guzeevmd.activediabetesassistant.screens.SearchScreen
 
 @Composable
 fun BottomNavigationBar() {
@@ -62,8 +62,8 @@ fun BottomNavigationBar() {
                     navController
                 )
             }
-            composable(Screens.Search.route) {
-                SearchScreen(
+            composable(Screens.GlucoseLevels.route) {
+                GlucoseLevelsScreen(
                     navController
                 )
             }

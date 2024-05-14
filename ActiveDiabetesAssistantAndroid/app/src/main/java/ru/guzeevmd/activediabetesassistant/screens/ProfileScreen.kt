@@ -1,6 +1,10 @@
 package ru.guzeevmd.activediabetesassistant.screens
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -11,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import ru.guzeevmd.activediabetesassistant.cards.PersonInfoCard
 import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClient
@@ -24,7 +30,7 @@ fun ProfileScreen(navController: NavController) {
         mutableStateOf<PersonInfoViewModel?>(null)
     }
     val exSet = remember {
-        mutableSetOf<Exception>()
+        mutableStateOf(setOf<Exception>())
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -49,10 +55,24 @@ fun ProfileScreen(navController: NavController) {
                         }
                         resp?.also { personInfoSet.value = resp }
                     }
+                    if (personInfoSet.value != null){
+                        personInfoSet.value?.let { PersonInfoCard(personInfo = it, paddingValues, snackbarHostState) }
+                    }
+                    else{
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ){
+                            CircularProgressIndicator(
+                                modifier = Modifier.padding(vertical = 20.dp)
+                            )
+                        }
+                    }
 
-                    personInfoSet.value?.let { PersonInfoCard(personInfo = it, paddingValues, snackbarHostState) }
-
-                    for (ex in exSet) {
+                    for (ex in exSet.value) {
                         Text(ex.message.toString())
                     }
                 }
