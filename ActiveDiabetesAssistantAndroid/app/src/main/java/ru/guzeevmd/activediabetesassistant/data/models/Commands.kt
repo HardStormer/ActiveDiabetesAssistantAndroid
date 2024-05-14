@@ -130,11 +130,21 @@ data class ValidationProblemDetails(
 @Serializable
 enum class Sex(val value: Int) {
     Male(0),
-    Female(1)
+    Female(1);
+    companion object {
+        fun fromInt(value: Int): Sex {
+            return values().firstOrNull { it.value == value } ?: Male
+        }
+    }
 }
 
 @Serializable
 enum class DiabetesType(val value: Int) {
     Type1(0),
-    Type2(1)
+    Type2(1);
+    companion object {
+        fun fromInt(value: Int): DiabetesType {
+            return values().firstOrNull { it.value == value } ?: Type1
+        }
+    }
 }
