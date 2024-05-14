@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -33,7 +34,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import ru.guzeevmd.activediabetesassistant.cards.GlucoseInfoCard
@@ -42,6 +46,7 @@ import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClien
 import ru.guzeevmd.activediabetesassistant.data.models.GlucoseInfoViewModel
 import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GlucoseLevelsScreen(navController: NavController) {
     val glucoseInfoSet = remember {
@@ -54,6 +59,9 @@ fun GlucoseLevelsScreen(navController: NavController) {
     var showCard by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var refreshTrigger by remember { mutableIntStateOf(0) }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val density = LocalDensity.current
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -112,9 +120,12 @@ fun GlucoseLevelsScreen(navController: NavController) {
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .background(MaterialTheme.colorScheme.background)
+                                    .align(Alignment.BottomCenter)
+                                    .background(MaterialTheme.colorScheme.surface)
                                     .fillMaxWidth()
                                     .align(Alignment.BottomCenter)
+//                                    .padding(paddingValues)
+                                    .imePadding()
                             ) {
                                 GlucoseInfoCreateCard(
                                     snackbarHostState = snackbarHostState,
