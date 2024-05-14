@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-//    kotlin("plugin.serialization") version "1.7.10"
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -51,12 +51,17 @@ android {
     }
 }
 
+val ktorVersion = "2.3.2"
 dependencies {
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-client-serialization:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+    implementation("io.ktor:ktor-client-mock:$ktorVersion")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("androidx.navigation:navigation-compose:2.4.0-beta02")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:latest")
-    implementation("io.ktor:ktor-client-core:2.3.11")
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.11")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.11")
     implementation("androidx.appcompat:appcompat:1.3.1")
     implementation("com.google.android.material:material:1.4.0")
     implementation("androidx.constraintlayout:constraintlayout:2.0.4")

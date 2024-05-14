@@ -1,6 +1,8 @@
 package ru.guzeevmd.activediabetesassistant.data.models
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
 @Serializable
 data class CreateGlucoseInfoCommand(
     val glucoseData: Int,
@@ -51,11 +53,17 @@ data class DeleteMyPersonInfoCommand(
 
 @Serializable
 data class PersonInfoViewModel(
+    @SerialName("id")
     val id: String,
+    @SerialName("createdAt")
     val createdAt: String,
+    @SerialName("name")
     val name: String?,
+    @SerialName("age")
     val age: Int,
+    @SerialName("sex")
     val sex: Int,
+    @SerialName("diabetesType")
     val diabetesType: Int
 )
 

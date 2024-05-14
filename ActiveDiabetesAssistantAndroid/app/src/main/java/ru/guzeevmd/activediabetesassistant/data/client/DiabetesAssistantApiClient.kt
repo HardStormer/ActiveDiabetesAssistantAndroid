@@ -2,8 +2,10 @@ package ru.guzeevmd.activediabetesassistant.data.client
 
 import android.media.tv.CommandResponse
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -13,6 +15,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.URLProtocol
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
@@ -29,9 +32,8 @@ import ru.guzeevmd.activediabetesassistant.data.models.UserViewModel
 class DiabetesAssistantApiClient() {
     private val baseUrl = "https://hardstormer-activediabetesassistant-b648.twc1.net"
     private val authToken = "edeae676b79041e2f0bc6e8a8aa4d9c224b634d5c99a46403a72914684575a3a1d8ab323735410b6d7e9e6f57097e5e6b9dba04848ba4b1544187b1f5475b4e388a248732e95169810661f6ba53c0b0d49eae3d05c08dd6c6d04c97b56d877cec3039d4ac987fabb7e2ada831c98e4221aeb41680ad6d382ab05b2e9344b64ab2bbf82941d5ceeb63ce2c055f6ee981614e2d69d052878f46a6bd18ae825209ee35890d97d4c984c8e1e20301357be088bdf4ec3e3a98b9951bc3ba4280c025a444a8e3a9c91ca48e29d150276dc91396ba67420c20f671e022e9bc02ed81638b3d6acb7db3840089aaa5518eea5edc0ee822a344bef963bc96542cbe463712c67561b0443eef8d94a3cefabf92574a9c8c3015bd6eac5fcfdc1e2b1dfd2e1ecac28de65182b3e9ba8e1406ed5e5210c1a9798189038666dd7b443d7990a1389dd76094e82d2a2515b334b8db89d10639c2c1b6bd05362478b9b21eddfa033ed144b5f348c40e848c2ca10e3541c573e42439fc348697fef0d81c0b2c934a43e"
-    private val clientTest = HttpClient()
 
-    private val client = HttpClient() {
+    private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             json(Json {
                 isLenient = true
@@ -40,7 +42,14 @@ class DiabetesAssistantApiClient() {
                 useArrayPolymorphism = true
             })
         }
-        install(DefaultRequest){
+
+        defaultRequest {
+            host = baseUrl
+            url {
+                protocol = URLProtocol.HTTPS
+            }
+            accept(ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
             header(HttpHeaders.Authorization, "Bearer $authToken")
         }
     }
