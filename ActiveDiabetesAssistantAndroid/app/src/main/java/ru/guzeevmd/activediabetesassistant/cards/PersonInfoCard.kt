@@ -181,6 +181,8 @@ fun PersonInfoCard(personInfo: PersonInfoViewModel, paddingValues: PaddingValues
                         val client = DiabetesAssistantApiClient()
                         val res = client.updatePersonInfo(command)
 
+                        isLoading = false
+                        isEditable = false
                         if (res.status.isSuccess()) {
                             snackbarHostState.showSnackbar(
                                 message = "Данные сохранены"
@@ -192,8 +194,6 @@ fun PersonInfoCard(personInfo: PersonInfoViewModel, paddingValues: PaddingValues
                                 message = "$status $bodyText"
                             )
                         }
-                        isLoading = false
-                        isEditable = false // Disable editing after saving
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
