@@ -11,14 +11,14 @@ data class ListResponse<T>(
 
 @Serializable
 data class CreateGlucoseInfoCommand(
-    val glucoseData: Int,
+    val glucoseData: Float,
     val stepsCount: Int?
 )
 
 @Serializable
 data class UpdateGlucoseInfoCommand(
     val glucoseInfoId: String,
-    val glucoseData: Int,
+    val glucoseData: Float,
     val stepsCount: Int?
 )
 
@@ -32,7 +32,7 @@ data class DeleteGlucoseInfoCommand(
 data class GlucoseInfoViewModel(
     val id: String,
     val createdAt: String,
-    val glucoseData: Int,
+    val glucoseData: Float,
     val stepsCount: Int?
 )
 
