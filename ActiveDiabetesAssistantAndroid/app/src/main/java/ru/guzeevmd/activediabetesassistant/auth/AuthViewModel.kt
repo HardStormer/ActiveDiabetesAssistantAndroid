@@ -1,5 +1,6 @@
 package ru.guzeevmd.activediabetesassistant.auth
 
+import android.content.Context
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -9,10 +10,39 @@ import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClien
 import ru.guzeevmd.activediabetesassistant.data.models.LoginUserCommand
 import ru.guzeevmd.activediabetesassistant.data.models.RegisterUserCommand
 
-class AuthViewModel(private val repository: DiabetesAssistantApiClient) : ViewModel() {
+class AuthViewModel(private val repository: DiabetesAssistantApiClient, val contextInner: Context) : ViewModel() {
 
-    private val _authState = mutableStateOf<AuthState>(AuthState.Idle)
+    private val _authState = mutableStateOf<AuthState>(
+        if (getJwtToken() != null){
+            AuthState.Authenticated(getJwtToken().toString())
+        }
+        else {
+            AuthState.Idle
+        })
     val authState: State<AuthState> = _authState
+    private val _context = mutableStateOf<Context>(contextInner)
+
+    // Save JWT Token to SharedPreferences
+    private fun saveJwtToken(token: String) {
+        val sharedPreferences = contextInner.getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("jwt_token", token)
+        editor.apply()
+    }
+
+    // Clear JWT Token from SharedPreferences
+    private fun clearJwtToken() {
+        val sharedPreferences = contextInner.getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.remove("jwt_token")
+        editor.apply()
+    }
+
+    // Retrieve JWT Token from SharedPreferences
+    fun getJwtToken(): String? {
+        val sharedPreferences = contextInner.getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("jwt_token", null)
+    }
 
     fun registerUser(credentials: RegisterUserCommand) {
         viewModelScope.launch {
@@ -20,6 +50,7 @@ class AuthViewModel(private val repository: DiabetesAssistantApiClient) : ViewMo
             val response = repository.registerUser(credentials)
             if (response?.token != null) {
                 _authState.value = AuthState.Authenticated(response.token)
+                saveJwtToken(response.token) // Save the token
             } else {
                 _authState.value = AuthState.Error("Registration failed")
             }
@@ -32,6 +63,7 @@ class AuthViewModel(private val repository: DiabetesAssistantApiClient) : ViewMo
             val response = repository.loginUser(credentials)
             if (response?.token != null) {
                 _authState.value = AuthState.Authenticated(response.token)
+                saveJwtToken(response.token) // Save the token
             } else {
                 _authState.value = AuthState.Error("Login failed")
             }
@@ -44,6 +76,7 @@ class AuthViewModel(private val repository: DiabetesAssistantApiClient) : ViewMo
             repository.logoutUser()
             _authState.value = AuthState.Idle
         }
+        clearJwtToken() // Clear the token
     }
 }
 

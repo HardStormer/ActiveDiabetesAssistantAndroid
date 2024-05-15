@@ -18,8 +18,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         val client = DiabetesAssistantApiClient(null)
-        
-        val viewModel = AuthViewModel(client)
+
+        val viewModel = AuthViewModel(client, applicationContext)
         
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {

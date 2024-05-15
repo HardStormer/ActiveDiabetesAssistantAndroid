@@ -53,7 +53,8 @@ android {
 
 val ktorVersion = "2.3.2"
 dependencies {
-
+//    implementation("com.android.tools.build:gradle:8.0.2") // Use the latest stable version
+//    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.21") // Use the latest stable version
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
@@ -81,6 +82,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.transport.runtime)
     implementation(libs.protolite.well.known.types)
+    implementation(libs.androidx.datastore.preferences.core.jvm)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
