@@ -1,4 +1,3 @@
-package ru.guzeevmd.activediabetesassistant.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -7,7 +6,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,15 +31,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
@@ -54,13 +51,13 @@ import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClien
 import ru.guzeevmd.activediabetesassistant.data.models.GlucoseInfoViewModel
 import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
     val glucoseInfoSet = remember { mutableStateOf(listOf<GlucoseInfoViewModel>()) }
     val exSet = remember { mutableStateOf(setOf<Exception>()) }
     val isLoading = remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var allDataLoaded by remember { mutableStateOf(false) }
 
     var showCard by remember { mutableStateOf(false) }
     var isDataGetted by remember { mutableStateOf(false) }
@@ -72,13 +69,20 @@ fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
 
     val client = DiabetesAssistantApiClient(authToken)
 
+    // Track the animation state of each item
+    val animatedItems = remember { mutableStateListOf<Int>() }
+
     LaunchedEffect(refreshTrigger) {
         isLoading.value = true
         var resp: Collection<GlucoseInfoViewModel> = emptyList()
         try {
             resp = client.getGlucoseInfoCollection(10, glucoseInfoSet.value.size).modelList
-            glucoseInfoSet.value = glucoseInfoSet.value + resp
-            isDataGetted = true
+            if (resp.isEmpty()) {
+                allDataLoaded = true
+            } else {
+                glucoseInfoSet.value = glucoseInfoSet.value + resp
+                isDataGetted = true
+            }
         } catch (e: Exception) {
             exSet.value = exSet.value + e
         } finally {
@@ -89,7 +93,7 @@ fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
 
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-            .filter { index -> index == glucoseInfoSet.value.size - 1 && !isLoading.value }
+            .filter { index -> index == glucoseInfoSet.value.size - 1 && !isLoading.value && !allDataLoaded }
             .distinctUntilChanged()
             .collect {
                 coroutineScope.launch {
@@ -104,25 +108,76 @@ fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
         content = { paddingValues ->
             NavigationBarMediumTheme {
                 Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onVerticalDrag = { _, _ -> },
-                                onDragEnd = {
-                                    if (!isRefreshing) {
-                                        isRefreshing = true
-                                        glucoseInfoSet.value =
-                                            emptyList() // Clear the list before refreshing
-                                        refreshTrigger++
-                                    }
-                                }
-                            )
-                        },
+                    modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    if (isDataGetted) {
-                        if (glucoseInfoSet.value.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (isDataGetted) {
+                            if (glucoseInfoSet.value.isEmpty()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("Нет записей")
+                                }
+                            } else {
+                                LazyColumn(state = listState) {
+                                    items(glucoseInfoSet.value.size, key = { it }) { index ->
+                                        // Use remember to control the visibility of the animation
+                                        val isVisible = remember { mutableStateOf(false) }
+                                        LaunchedEffect(Unit) {
+                                            delay(100L * index) // Adjust the delay for staggered effect
+                                            isVisible.value = true
+                                            animatedItems.add(index)
+                                        }
+                                        if (index !in animatedItems) {
+                                            AnimatedVisibility(
+                                                visible = isVisible.value,
+                                                enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+                                                exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
+                                            ) {
+                                                GlucoseInfoCard(
+                                                    glucoseInfoSet.value[index],
+                                                    paddingValues,
+                                                    snackbarHostState,
+                                                    authToken
+                                                ) { refreshTrigger++ }
+                                            }
+                                        } else {
+                                            GlucoseInfoCard(
+                                                glucoseInfoSet.value[index],
+                                                paddingValues,
+                                                snackbarHostState,
+                                                authToken
+                                            ) { refreshTrigger++ }
+                                        }
+                                    }
+                                    item {
+                                        if (isLoading.value) {
+                                            Column {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier
+                                                        .padding(vertical = 20.dp)
+                                                        .align(Alignment.CenterHorizontally)
+                                                )
+                                            }
+                                        } else if (allDataLoaded) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 20.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text("Больше записей нет")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
                             Column(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -130,94 +185,62 @@ fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Нет записей")
-                            }
-                        } else {
-                            LazyColumn(state = listState) {
-                                items(glucoseInfoSet.value.size, key = { it }) { index ->
-                                    GlucoseInfoCard(
-                                        glucoseInfoSet.value[index],
-                                        paddingValues,
-                                        snackbarHostState,
-                                        authToken
-                                    ) { refreshTrigger++ }
-                                }
-                                item {
-                                    if (isLoading.value) {
-                                        Column {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier
-                                                    .padding(vertical = 20.dp)
-                                                    .align(Alignment.CenterHorizontally)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.padding(vertical = 20.dp)
-                            )
-                        }
-                    }
-
-                    AnimatedVisibility(
-                        visible = showCard,
-                        enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-                        exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clickable(
-                                    onClick = { showCard = false },
-                                    indication = null,
-                                    interactionSource = remember { MutableInteractionSource() })
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .fillMaxWidth()
-                                    .align(Alignment.BottomCenter)
-                                    .imePadding()
-                            ) {
-                                GlucoseInfoCreateCard(
-                                    snackbarHostState = snackbarHostState,
-                                    onClose = { showCard = false; refreshTrigger++ },
-                                    authToken = authToken
+                                CircularProgressIndicator(
+                                    modifier = Modifier.padding(vertical = 20.dp)
                                 )
                             }
                         }
-                    }
 
-                    exSet.value.forEach { ex ->
-                        LaunchedEffect(snackbarHostState) {
-                            snackbarHostState.showSnackbar(message = ex.message ?: "Unknown error")
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        if (!showCard) {
-                            FloatingActionButton(
-                                onClick = { showCard = true },
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.background,
+                        AnimatedVisibility(
+                            visible = showCard,
+                            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+                            exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
+                        ) {
+                            Box(
                                 modifier = Modifier
-                                    .padding(16.dp)
-                                    .align(Alignment.BottomEnd)
+                                    .fillMaxSize()
+                                    .clickable(
+                                        onClick = { showCard = false },
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() })
                             ) {
-                                Icon(Icons.Filled.Add, contentDescription = "Add")
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .fillMaxWidth()
+                                        .align(Alignment.BottomCenter)
+                                        .imePadding()
+                                ) {
+                                    GlucoseInfoCreateCard(
+                                        snackbarHostState = snackbarHostState,
+                                        onClose = { showCard = false; refreshTrigger++ },
+                                        authToken = authToken
+                                    )
+                                }
+                            }
+                        }
+
+                        exSet.value.forEach { ex ->
+                            LaunchedEffect(snackbarHostState) {
+                                snackbarHostState.showSnackbar(message = ex.message ?: "Unknown error")
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            if (!showCard) {
+                                FloatingActionButton(
+                                    onClick = { showCard = true },
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.background,
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .align(Alignment.BottomEnd)
+                                ) {
+                                    Icon(Icons.Filled.Add, contentDescription = "Add")
+                                }
                             }
                         }
                     }

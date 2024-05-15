@@ -1,4 +1,5 @@
 package ru.guzeevmd.activediabetesassistant.activities
+import GlucoseLevelsScreen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -15,7 +16,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ru.guzeevmd.activediabetesassistant.auth.AuthViewModel
-import ru.guzeevmd.activediabetesassistant.screens.GlucoseLevelsScreen
 import ru.guzeevmd.activediabetesassistant.screens.HomeScreen
 import ru.guzeevmd.activediabetesassistant.screens.OcrScreen
 import ru.guzeevmd.activediabetesassistant.screens.ProfileScreen
