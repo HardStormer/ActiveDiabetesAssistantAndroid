@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +58,7 @@ fun GlucoseLevelsScreen(navController: NavController) {
     }
 
     var showCard by remember { mutableStateOf(false) }
+    var isDataGetted by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
@@ -72,11 +74,13 @@ fun GlucoseLevelsScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     LaunchedEffect(refreshTrigger) {
+                        isDataGetted = false
                         val client = DiabetesAssistantApiClient()
                         var resp: Collection<GlucoseInfoViewModel> = emptyList()
                         try {
                             resp = client.getGlucoseInfoCollection(10, 0).modelList
                             glucoseInfoSet.value = resp.toSet()
+                            isDataGetted = true
                         } catch (e: Exception) {
                             snackbarHostState.showSnackbar(
                                 message = e.message.toString()
@@ -84,27 +88,44 @@ fun GlucoseLevelsScreen(navController: NavController) {
                         }
                     }
 
-                    if (glucoseInfoSet.value.isEmpty()) {
+                    if(isDataGetted){
+                        if (glucoseInfoSet.value.isEmpty()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("Нет записей")
+                            }
+                        } else {
+                            LazyColumn {
+                                items(glucoseInfoSet.value.size) {
+                                    GlucoseInfoCard(
+                                        glucoseInfoSet.value.elementAt(it),
+                                        paddingValues,
+                                        snackbarHostState
+                                    ) { refreshTrigger++ }
+                                }
+                            }
+                        }
+                    }
+                    else{
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("Нет записей")
-                        }
-                    } else {
-                        LazyColumn {
-                            items(glucoseInfoSet.value.size) {
-                                GlucoseInfoCard(
-                                    glucoseInfoSet.value.elementAt(it),
-                                    paddingValues,
-                                    snackbarHostState
-                                ) { refreshTrigger++ }
-                            }
+                        ){
+                            CircularProgressIndicator(
+                                modifier = Modifier.padding(vertical = 20.dp)
+                            )
                         }
                     }
+
+
                     AnimatedVisibility(
                         visible = showCard,
                         enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
