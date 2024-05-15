@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,12 +35,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import ru.guzeevmd.activediabetesassistant.cards.GlucoseInfoCard
 import ru.guzeevmd.activediabetesassistant.cards.GlucoseInfoCreateCard
 import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClient
@@ -48,42 +57,71 @@ import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
-    val glucoseInfoSet = remember {
-        mutableStateOf(setOf<GlucoseInfoViewModel>())
-    }
-    val exSet = remember {
-        mutableStateOf(setOf<Exception>())
-    }
+    val glucoseInfoSet = remember { mutableStateOf(listOf<GlucoseInfoViewModel>()) }
+    val exSet = remember { mutableStateOf(setOf<Exception>()) }
+    val isLoading = remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
 
     var showCard by remember { mutableStateOf(false) }
     var isDataGetted by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val client = DiabetesAssistantApiClient(authToken)
+
+    LaunchedEffect(refreshTrigger) {
+        isLoading.value = true
+        var resp: Collection<GlucoseInfoViewModel> = emptyList()
+        try {
+            resp = client.getGlucoseInfoCollection(10, glucoseInfoSet.value.size).modelList
+            glucoseInfoSet.value = glucoseInfoSet.value + resp
+            isDataGetted = true
+        } catch (e: Exception) {
+            exSet.value = exSet.value + e
+        } finally {
+            isLoading.value = false
+            isRefreshing = false
+        }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .filter { index -> index == glucoseInfoSet.value.size - 1 && !isLoading.value }
+            .distinctUntilChanged()
+            .collect {
+                coroutineScope.launch {
+                    delay(300) // Debounce to prevent multiple triggers
+                    refreshTrigger++
+                }
+            }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         content = { paddingValues ->
             NavigationBarMediumTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onVerticalDrag = { _, _ -> },
+                                onDragEnd = {
+                                    if (!isRefreshing) {
+                                        isRefreshing = true
+                                        glucoseInfoSet.value =
+                                            emptyList() // Clear the list before refreshing
+                                        refreshTrigger++
+                                    }
+                                }
+                            )
+                        },
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LaunchedEffect(refreshTrigger) {
-                        isDataGetted = false
-                        val client = DiabetesAssistantApiClient(authToken)
-                        var resp: Collection<GlucoseInfoViewModel> = emptyList()
-                        try {
-                            resp = client.getGlucoseInfoCollection(10, 0).modelList
-                            glucoseInfoSet.value = resp.toSet()
-                            isDataGetted = true
-                        } catch (e: Exception) {
-                            snackbarHostState.showSnackbar(
-                                message = e.message.toString()
-                            )
-                        }
-                    }
-
-                    if(isDataGetted){
+                    if (isDataGetted) {
                         if (glucoseInfoSet.value.isEmpty()) {
                             Column(
                                 modifier = Modifier
@@ -95,32 +133,41 @@ fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
                                 Text("Нет записей")
                             }
                         } else {
-                            LazyColumn {
-                                items(glucoseInfoSet.value.size) {
+                            LazyColumn(state = listState) {
+                                items(glucoseInfoSet.value.size, key = { it }) { index ->
                                     GlucoseInfoCard(
-                                        glucoseInfoSet.value.elementAt(it),
+                                        glucoseInfoSet.value[index],
                                         paddingValues,
                                         snackbarHostState,
                                         authToken
                                     ) { refreshTrigger++ }
                                 }
+                                item {
+                                    if (isLoading.value) {
+                                        Column {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier
+                                                    .padding(vertical = 20.dp)
+                                                    .align(Alignment.CenterHorizontally)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
-                    else{
+                    } else {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
-                        ){
+                        ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.padding(vertical = 20.dp)
                             )
                         }
                     }
-
 
                     AnimatedVisibility(
                         visible = showCard,
@@ -141,7 +188,6 @@ fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
                                     .background(MaterialTheme.colorScheme.surface)
                                     .fillMaxWidth()
                                     .align(Alignment.BottomCenter)
-//                                    .padding(paddingValues)
                                     .imePadding()
                             ) {
                                 GlucoseInfoCreateCard(
@@ -153,10 +199,12 @@ fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
                         }
                     }
 
-
-                    for (ex in exSet.value) {
-                        Text(ex.message.toString())
+                    exSet.value.forEach { ex ->
+                        LaunchedEffect(snackbarHostState) {
+                            snackbarHostState.showSnackbar(message = ex.message ?: "Unknown error")
+                        }
                     }
+
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {

@@ -24,7 +24,7 @@ class AuthViewModel(private val repository: DiabetesAssistantApiClient, val cont
 
     // Save JWT Token to SharedPreferences
     private fun saveJwtToken(token: String) {
-        val sharedPreferences = contextInner.getSharedPreferences("myPrefs2", Context.MODE_PRIVATE)
+        val sharedPreferences = contextInner.getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("jwt_token", token)
         editor.apply()
@@ -32,7 +32,7 @@ class AuthViewModel(private val repository: DiabetesAssistantApiClient, val cont
 
     // Clear JWT Token from SharedPreferences
     private fun clearJwtToken() {
-        val sharedPreferences = contextInner.getSharedPreferences("myPrefs2", Context.MODE_PRIVATE)
+        val sharedPreferences = contextInner.getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.remove("jwt_token")
         editor.apply()
@@ -40,7 +40,7 @@ class AuthViewModel(private val repository: DiabetesAssistantApiClient, val cont
 
     // Retrieve JWT Token from SharedPreferences
     fun getJwtToken(): String? {
-        val sharedPreferences = contextInner.getSharedPreferences("myPrefs2", Context.MODE_PRIVATE)
+        val sharedPreferences = contextInner.getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
         return sharedPreferences.getString("jwt_token", null)
     }
 

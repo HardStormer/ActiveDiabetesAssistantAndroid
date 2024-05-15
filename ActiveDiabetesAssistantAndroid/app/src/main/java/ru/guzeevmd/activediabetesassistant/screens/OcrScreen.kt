@@ -1,12 +1,15 @@
 package ru.guzeevmd.activediabetesassistant.screens
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -51,7 +54,14 @@ import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClien
 import ru.guzeevmd.activediabetesassistant.data.models.OcrResponse
 import java.io.File
 
+
+fun createImageFile(context: Context): File {
+    val storageDir: File = context.getExternalFilesDir(null) ?: context.filesDir
+    return File.createTempFile("JPEG_", ".jpg", storageDir)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
+
 
 @Composable
 fun OcrScreen() {
@@ -90,12 +100,20 @@ fun OcrScreen() {
         }
     }
 
-    var imageFile by remember { mutableStateOf<File?>(null) }
-
-    fun createImageFile(): File {
-        val storageDir: File = context.getExternalFilesDir(null) ?: context.filesDir
-        return File.createTempFile("JPEG_", ".jpg", storageDir).apply {
-            imageFile = this
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            val file = createImageFile(context)
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            imageUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -109,141 +127,144 @@ fun OcrScreen() {
             )
         },
         content = { paddingValues ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(16.dp)
                     .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally
+                contentAlignment = Alignment.Center
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                Row {
-                    Button(
-                        onClick = { galleryLauncher.launch("image/*") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(8.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text(
-                            text = "Choose Image",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            val file = createImageFile()
-                            val uri = FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.fileprovider",
-                                file
-                            )
-                            imageUri = uri
-                            cameraLauncher.launch(uri)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(8.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text(
-                            text = "Take Picture",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                imageUri?.let {
-                    val bitmap = remember { mutableStateOf<Bitmap?>(null) }
-                    LaunchedEffect(imageUri) {
-                        context.contentResolver.openInputStream(imageUri!!).use { inputStream ->
-                            bitmap.value = BitmapFactory.decodeStream(inputStream)
-                        }
-                    }
-
-                    bitmap.value?.let { bmp ->
-                        Image(
-                            bitmap = bmp.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(250.dp)
-                                .padding(16.dp)
-                                .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp))
-                        )
-                        Spacer(modifier = Modifier.height(20.dp))
+                    Row {
                         Button(
-                            onClick = {
-                                isLoading = true
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    val result = client.recognizeText(bmp)
-                                    withContext(Dispatchers.Main) {
-                                        ocrResult = result
-                                        isLoading = false
-                                    }
-                                }
-                            },
+                            onClick = { galleryLauncher.launch("image/*") },
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
+                                .weight(1f)
+                                .padding(8.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
                             Text(
-                                text = "Upload Image",
+                                text = "Choose Image",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Text(
+                                text = "Take Picture",
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    imageUri?.let {
+                        val bitmap = remember { mutableStateOf<Bitmap?>(null) }
+                        LaunchedEffect(imageUri) {
+                            context.contentResolver.openInputStream(imageUri!!).use { inputStream ->
+                                bitmap.value = BitmapFactory.decodeStream(inputStream)
+                            }
+                        }
+
+                        bitmap.value?.let { bmp ->
+                            Image(
+                                bitmap = bmp.asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(250.dp)
+                                    .padding(16.dp)
+                                    .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp))
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Button(
+                                onClick = {
+                                    isLoading = true
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        val result = client.recognizeText(bmp)
+                                        withContext(Dispatchers.Main) {
+                                            ocrResult = result
+                                            isLoading = false
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text(
+                                    text = "Upload Image",
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    if (isLoading) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    ocrResult?.let {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = "OCR Result:",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(text = "Recognized Text: ${it.text}")
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = "Best Block: ${it.bestBlock}")
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = "Biggest Block: ${it.biggestBlockText}")
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = "Most Square Block: ${it.mostSquareBlockText}")
+                            }
+                        }
+                    }
                 }
 
                 if (isLoading) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                ocrResult?.let {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = "OCR Result:",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "Recognized Text: ${it.text}")
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "Best Block: ${it.bestBlock}")
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "Biggest Block: ${it.biggestBlockText}")
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "Most Square Block: ${it.mostSquareBlockText}")
-                        }
-                    }
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(vertical = 20.dp)
+                    )
                 }
             }
         }
