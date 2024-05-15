@@ -19,7 +19,7 @@ import ru.guzeevmd.activediabetesassistant.screens.HomeScreen
 import ru.guzeevmd.activediabetesassistant.screens.ProfileScreen
 
 @Composable
-fun BottomNavigationBar() {
+fun BottomNavigationBar(authToken: String) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -59,17 +59,17 @@ fun BottomNavigationBar() {
             modifier = Modifier.padding(paddingValues = paddingValues)) {
             composable(Screens.Home.route) {
                 HomeScreen(
-                    navController
+                    navController, authToken
                 )
             }
             composable(Screens.GlucoseLevels.route) {
                 GlucoseLevelsScreen(
-                    navController
+                    navController, authToken
                 )
             }
             composable(Screens.Profile.route) {
                 ProfileScreen(
-                    navController
+                    navController, authToken
                 )
             }
         }

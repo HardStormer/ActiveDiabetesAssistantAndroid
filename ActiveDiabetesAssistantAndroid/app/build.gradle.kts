@@ -53,6 +53,8 @@ android {
 
 val ktorVersion = "2.3.2"
 dependencies {
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-client-serialization:$ktorVersion")

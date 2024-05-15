@@ -25,7 +25,7 @@ import ru.guzeevmd.activediabetesassistant.data.models.PersonInfoViewModel
 import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(navController: NavController, authToken: String) {
     val personInfoSet = remember {
         mutableStateOf<PersonInfoViewModel?>(null)
     }
@@ -44,7 +44,7 @@ fun ProfileScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     LaunchedEffect(Unit) {
-                        val client = DiabetesAssistantApiClient()
+                        val client = DiabetesAssistantApiClient(authToken)
                         var resp: PersonInfoViewModel? = null
                         try {
                             resp = client.getPersonInfo()
@@ -56,7 +56,7 @@ fun ProfileScreen(navController: NavController) {
                         resp?.also { personInfoSet.value = resp }
                     }
                     if (personInfoSet.value != null){
-                        personInfoSet.value?.let { PersonInfoCard(personInfo = it, paddingValues, snackbarHostState) }
+                        personInfoSet.value?.let { PersonInfoCard(personInfo = it, paddingValues, snackbarHostState, authToken) }
                     }
                     else{
                         Column(

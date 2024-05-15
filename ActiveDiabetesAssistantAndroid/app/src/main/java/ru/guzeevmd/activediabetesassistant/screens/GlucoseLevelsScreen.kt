@@ -49,7 +49,7 @@ import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun GlucoseLevelsScreen(navController: NavController) {
+fun GlucoseLevelsScreen(navController: NavController, authToken: String) {
     val glucoseInfoSet = remember {
         mutableStateOf(setOf<GlucoseInfoViewModel>())
     }
@@ -75,7 +75,7 @@ fun GlucoseLevelsScreen(navController: NavController) {
                 ) {
                     LaunchedEffect(refreshTrigger) {
                         isDataGetted = false
-                        val client = DiabetesAssistantApiClient()
+                        val client = DiabetesAssistantApiClient(authToken)
                         var resp: Collection<GlucoseInfoViewModel> = emptyList()
                         try {
                             resp = client.getGlucoseInfoCollection(10, 0).modelList
@@ -105,7 +105,8 @@ fun GlucoseLevelsScreen(navController: NavController) {
                                     GlucoseInfoCard(
                                         glucoseInfoSet.value.elementAt(it),
                                         paddingValues,
-                                        snackbarHostState
+                                        snackbarHostState,
+                                        authToken
                                     ) { refreshTrigger++ }
                                 }
                             }
@@ -150,7 +151,8 @@ fun GlucoseLevelsScreen(navController: NavController) {
                             ) {
                                 GlucoseInfoCreateCard(
                                     snackbarHostState = snackbarHostState,
-                                    onClose = { showCard = false; refreshTrigger++ }
+                                    onClose = { showCard = false; refreshTrigger++ },
+                                    authToken = authToken
                                 )
                             }
                         }

@@ -40,6 +40,7 @@ import ru.guzeevmd.activediabetesassistant.data.models.CreateGlucoseInfoCommand
 @Composable
 fun GlucoseInfoCreateCard(
     snackbarHostState: SnackbarHostState,
+    authToken: String,
     onClose: () -> Unit) {
     var glucoseLevel by remember { mutableStateOf("") }
     var stepsCount by remember { mutableStateOf("") }
@@ -102,7 +103,7 @@ fun GlucoseInfoCreateCard(
                             glucoseData = glucoseLevel.toInt(),
                             stepsCount = stepsCount.toInt()
                         )
-                        val client = DiabetesAssistantApiClient()
+                        val client = DiabetesAssistantApiClient(authToken)
                         val res = client.createGlucoseInfo(command)
 
                         isLoading = false

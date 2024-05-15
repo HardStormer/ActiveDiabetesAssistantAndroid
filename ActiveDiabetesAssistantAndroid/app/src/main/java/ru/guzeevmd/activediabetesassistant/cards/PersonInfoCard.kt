@@ -40,7 +40,11 @@ import ru.guzeevmd.activediabetesassistant.data.models.UpdateMyPersonInfoCommand
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun PersonInfoCard(personInfo: PersonInfoViewModel, paddingValues: PaddingValues, snackbarHostState: SnackbarHostState) {
+fun PersonInfoCard(
+    personInfo: PersonInfoViewModel,
+    paddingValues: PaddingValues,
+    snackbarHostState: SnackbarHostState,
+    authToken: String) {
     var name by remember { mutableStateOf(personInfo.name ?: "") }
     var age by remember { mutableStateOf(personInfo.age.toString()) }
     var sex by remember { mutableIntStateOf(personInfo.sex) }
@@ -178,7 +182,7 @@ fun PersonInfoCard(personInfo: PersonInfoViewModel, paddingValues: PaddingValues
                             sex = sex,
                             diabetesType = diabetesType.toInt()
                         )
-                        val client = DiabetesAssistantApiClient()
+                        val client = DiabetesAssistantApiClient(authToken)
                         val res = client.updatePersonInfo(command)
 
                         isLoading = false

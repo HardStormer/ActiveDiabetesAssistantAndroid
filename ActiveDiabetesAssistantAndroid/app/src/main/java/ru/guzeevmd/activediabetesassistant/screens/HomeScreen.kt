@@ -18,7 +18,7 @@ import androidx.navigation.NavController
 import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, authToken: String) {
     NavigationBarMediumTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),

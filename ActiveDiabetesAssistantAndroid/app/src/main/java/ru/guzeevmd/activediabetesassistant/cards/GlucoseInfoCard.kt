@@ -41,6 +41,7 @@ fun GlucoseInfoCard(
     glucoseInfo: GlucoseInfoViewModel,
     pagingValues: PaddingValues,
     snackbarHostState: SnackbarHostState,
+    authToken: String,
     onDelete: () -> Unit) {
     val date = ZonedDateTime.parse(glucoseInfo.createdAt, DateTimeFormatter.ISO_ZONED_DATE_TIME).toLocalDateTime()
 
@@ -67,7 +68,7 @@ fun GlucoseInfoCard(
                 Spacer(Modifier.weight(1f))
                 Button(onClick = {
                     coroutineScope.launch {
-                        val client = DiabetesAssistantApiClient()
+                        val client = DiabetesAssistantApiClient(authToken)
                         val command = DeleteGlucoseInfoCommand(
                             false,
                             glucoseInfo.id
