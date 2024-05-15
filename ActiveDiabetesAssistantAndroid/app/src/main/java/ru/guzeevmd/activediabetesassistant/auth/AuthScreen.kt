@@ -53,7 +53,7 @@ fun AuthScreen(viewModel: AuthViewModel) {
                             modifier = Modifier.fillMaxSize(),
                             color = MaterialTheme.colorScheme.background
                         ) {
-                            BottomNavigationBar((authState as Authenticated).token)
+                            BottomNavigationBar(viewModel, (authState as Authenticated).token)
                         }
                     }
                 }

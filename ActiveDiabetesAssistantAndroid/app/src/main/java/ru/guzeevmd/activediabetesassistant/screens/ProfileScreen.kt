@@ -19,13 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import ru.guzeevmd.activediabetesassistant.auth.AuthViewModel
 import ru.guzeevmd.activediabetesassistant.cards.PersonInfoCard
 import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClient
 import ru.guzeevmd.activediabetesassistant.data.models.PersonInfoViewModel
 import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 
 @Composable
-fun ProfileScreen(navController: NavController, authToken: String) {
+fun ProfileScreen(
+    navController: NavController,
+    authToken: String,
+    viewModel: AuthViewModel) {
     val personInfoSet = remember {
         mutableStateOf<PersonInfoViewModel?>(null)
     }
@@ -56,7 +60,7 @@ fun ProfileScreen(navController: NavController, authToken: String) {
                         resp?.also { personInfoSet.value = resp }
                     }
                     if (personInfoSet.value != null){
-                        personInfoSet.value?.let { PersonInfoCard(personInfo = it, paddingValues, snackbarHostState, authToken) }
+                        personInfoSet.value?.let { PersonInfoCard(viewModel ,it , paddingValues, snackbarHostState, authToken) }
                     }
                     else{
                         Column(

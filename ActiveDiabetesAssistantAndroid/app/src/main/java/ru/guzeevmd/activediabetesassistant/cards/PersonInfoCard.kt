@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.launch
+import ru.guzeevmd.activediabetesassistant.auth.AuthViewModel
 import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClient
 import ru.guzeevmd.activediabetesassistant.data.models.DiabetesType
 import ru.guzeevmd.activediabetesassistant.data.models.PersonInfoViewModel
@@ -41,6 +42,7 @@ import ru.guzeevmd.activediabetesassistant.data.models.UpdateMyPersonInfoCommand
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PersonInfoCard(
+    viewModel: AuthViewModel,
     personInfo: PersonInfoViewModel,
     paddingValues: PaddingValues,
     snackbarHostState: SnackbarHostState,
@@ -212,6 +214,15 @@ fun PersonInfoCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Обновить")
+            }
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = {
+                    viewModel.logoutUser()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Выйти")
             }
         }
     }

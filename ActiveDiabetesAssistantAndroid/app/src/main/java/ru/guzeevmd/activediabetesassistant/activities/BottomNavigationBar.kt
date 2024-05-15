@@ -14,12 +14,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import ru.guzeevmd.activediabetesassistant.auth.AuthViewModel
 import ru.guzeevmd.activediabetesassistant.screens.GlucoseLevelsScreen
 import ru.guzeevmd.activediabetesassistant.screens.HomeScreen
 import ru.guzeevmd.activediabetesassistant.screens.ProfileScreen
 
 @Composable
-fun BottomNavigationBar(authToken: String) {
+fun BottomNavigationBar(
+    viewModel: AuthViewModel,
+    authToken: String) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -69,7 +72,7 @@ fun BottomNavigationBar(authToken: String) {
             }
             composable(Screens.Profile.route) {
                 ProfileScreen(
-                    navController, authToken
+                    navController, authToken, viewModel
                 )
             }
         }
