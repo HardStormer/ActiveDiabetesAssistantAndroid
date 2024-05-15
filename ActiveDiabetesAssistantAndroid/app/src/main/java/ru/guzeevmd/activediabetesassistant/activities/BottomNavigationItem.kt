@@ -3,6 +3,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class BottomNavigationItem(
@@ -26,6 +27,11 @@ data class BottomNavigationItem(
                 label = "Профиль",
                 icon = Icons.Filled.AccountCircle,
                 route = Screens.Profile.route
+            ),
+            BottomNavigationItem(
+                label = "LookImage",
+                icon = Icons.Filled.Search,
+                route = Screens.Orc.route
             ),
         )
     }

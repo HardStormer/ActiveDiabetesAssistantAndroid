@@ -1,10 +1,13 @@
 package ru.guzeevmd.activediabetesassistant.data.client
 
+import android.graphics.Bitmap
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.accept
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -13,11 +16,13 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.URLProtocol
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.InternalAPI
 import kotlinx.serialization.json.Json
 import ru.guzeevmd.activediabetesassistant.data.models.CreateGlucoseInfoCommand
 import ru.guzeevmd.activediabetesassistant.data.models.CreateMyPersonInfoCommand
@@ -26,10 +31,12 @@ import ru.guzeevmd.activediabetesassistant.data.models.GlucoseInfoViewModel
 import ru.guzeevmd.activediabetesassistant.data.models.ListResponse
 import ru.guzeevmd.activediabetesassistant.data.models.LoginUserCommand
 import ru.guzeevmd.activediabetesassistant.data.models.LoginUserCommandResponse
+import ru.guzeevmd.activediabetesassistant.data.models.OcrResponse
 import ru.guzeevmd.activediabetesassistant.data.models.PersonInfoViewModel
 import ru.guzeevmd.activediabetesassistant.data.models.RegisterUserCommand
 import ru.guzeevmd.activediabetesassistant.data.models.UpdateMyPersonInfoCommand
 import ru.guzeevmd.activediabetesassistant.data.models.UserViewModel
+import java.io.ByteArrayOutputStream
 
 class DiabetesAssistantApiClient(private val authToken: String?) {
     private val baseUrl = "https://hardstormer-activediabetesassistant-b648.twc1.net"
@@ -168,5 +175,29 @@ class DiabetesAssistantApiClient(private val authToken: String?) {
             contentType(ContentType.Application.Json)
             setBody(command)
         }
+
+    @OptIn(InternalAPI::class)
+    suspend fun recognizeText(bitmap: Bitmap): OcrResponse? {
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+        val byteArray = stream.toByteArray()
+
+        val response = client.post("$baseUrl/VisionOcr/RecognizeText") {
+            body = MultiPartFormDataContent(
+                formData {
+                    append("FormFile", byteArray, Headers.build {
+                        append(HttpHeaders.ContentType, "image/jpeg")
+                        append(HttpHeaders.ContentDisposition, "filename=\"image.jpg\"")
+                    })
+                }
+            )
+        }
+
+        return if (response.status.isSuccess()) {
+            Json.decodeFromString<OcrResponse>(response.bodyAsText())
+        } else {
+            null // Handle errors or throw an exception as needed
+        }
+    }
 
 }

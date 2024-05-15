@@ -143,6 +143,13 @@ enum class Sex(val value: Int) {
         }
     }
 }
+@Serializable
+data class OcrResponse(
+    val text: String,
+    val bestBlock: String,
+    val biggestBlockText: String,
+    val mostSquareBlockText: String
+)
 
 @Serializable
 enum class DiabetesType(val value: Int) {

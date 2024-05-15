@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import ru.guzeevmd.activediabetesassistant.auth.AuthViewModel
 import ru.guzeevmd.activediabetesassistant.screens.GlucoseLevelsScreen
 import ru.guzeevmd.activediabetesassistant.screens.HomeScreen
+import ru.guzeevmd.activediabetesassistant.screens.OcrScreen
 import ru.guzeevmd.activediabetesassistant.screens.ProfileScreen
 
 @Composable
@@ -74,6 +75,9 @@ fun BottomNavigationBar(
                 ProfileScreen(
                     navController, authToken, viewModel
                 )
+            }
+            composable(Screens.Orc.route) {
+                OcrScreen()
             }
         }
     }

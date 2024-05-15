@@ -55,6 +55,10 @@ val ktorVersion = "2.3.2"
 dependencies {
 //    implementation("com.android.tools.build:gradle:8.0.2") // Use the latest stable version
 //    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.21") // Use the latest stable version
+    implementation("androidx.camera:camera-core:1.1.0")
+    implementation("androidx.camera:camera-camera2:1.1.0")
+    implementation("androidx.camera:camera-lifecycle:1.1.0")
+    implementation("androidx.camera:camera-view:1.1.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")

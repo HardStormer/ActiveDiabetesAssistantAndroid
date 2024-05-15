@@ -4,4 +4,5 @@ sealed class Screens(val route : String) {
     object Home : Screens("home_screen")
     object GlucoseLevels : Screens("glucose_levels_screen")
     object Profile : Screens("profile_screen")
+    object Orc : Screens("orc_screen")
 }

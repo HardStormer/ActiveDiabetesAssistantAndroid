@@ -100,7 +100,7 @@ fun GlucoseInfoCreateCard(
                         isLoading = true
                         // Handle save action
                         val command = CreateGlucoseInfoCommand(
-                            glucoseData = glucoseLevel.toInt(),
+                            glucoseData = glucoseLevel.toFloat(),
                             stepsCount = stepsCount.toInt()
                         )
                         val client = DiabetesAssistantApiClient(authToken)
