@@ -32,7 +32,9 @@ fun LoginScreen(
     paddingValues: PaddingValues,
     errorMessage: String? = null) {
     var email by remember { mutableStateOf("") }
+    var isEmailValid by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
+    var isPasswordValid by remember { mutableStateOf(false) }
     var isLogin by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -50,15 +52,21 @@ fun LoginScreen(
     ) {
         TextField(
             value = email,
-            onValueChange = { email = it },
-            label = { Text("Почта") }
+            onValueChange = { input ->
+                email = input
+                isEmailValid = input.isNotEmpty() && input.matches(Regex("^[\\w-.]+@([\\w-]+.)+[\\w-]{2,4}$"))},
+            label = { Text("Почта") },
+            isError = !isEmailValid
         )
         Spacer(modifier = Modifier.height(8.dp))
         TextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = { input ->
+                password = input
+                isPasswordValid = input.isNotEmpty() && input.matches(Regex("^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,}$"))},
             label = { Text("Пароль") },
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            isError = !isPasswordValid
         )
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = {
