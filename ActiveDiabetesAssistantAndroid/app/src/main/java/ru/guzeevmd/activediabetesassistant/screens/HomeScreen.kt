@@ -29,8 +29,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
@@ -40,6 +45,7 @@ import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClien
 import ru.guzeevmd.activediabetesassistant.data.models.AskAiCommand
 import ru.guzeevmd.activediabetesassistant.data.models.GlucoseInfoViewModel
 import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
+import java.time.LocalDateTime
 
 @kotlinx.serialization.Serializable
 data class ChatGptResponse(
@@ -193,7 +199,6 @@ fun AiRiskPredictionPopup(
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(dismissOnClickOutside = true)) {
         Surface(
             shape = MaterialTheme.shapes.medium,
-//            elevation = 24.dp
         ) {
             Box(
                 modifier = Modifier
@@ -210,7 +215,14 @@ fun AiRiskPredictionPopup(
                     if (isAiLoading) {
                         CircularProgressIndicator()
                     } else {
-                        Text(text = aiResponse, style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = formatAiResponse(aiResponse),
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth(),
+                            softWrap = true,
+                            maxLines = Int.MAX_VALUE
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -235,14 +247,44 @@ fun AiRiskPredictionPopup(
         onLoadingStateChange(false)
     }
 }
+@Composable
+fun formatAiResponse(response: String): AnnotatedString {
+    return buildAnnotatedString {
+        val lines = response.replace("\"", "").split("\\n")
+        for (line in lines) {
+            withStyle(style = ParagraphStyle(lineHeight = 20.sp)) {
+                append(line)
+            }
+            append("\n")
+        }
+    }
+}
 fun generatePrompt(glucoseInfoSet: Set<GlucoseInfoViewModel>): String {
-    val glucoseData = glucoseInfoSet.joinToString(separator = "\n") {
+    val glucoseData = glucoseInfoSet
+        .filter { it.createdAt >= LocalDateTime.now().minusHours(5).toString() }
+        .joinToString(separator = "\n") {
         "ID: ${it.id}, Date: ${it.createdAt}, Glucose: ${it.glucoseData}, Steps: ${it.stepsCount ?: 0}"
     }
     return """
-        Provide a detailed risk assessment based on the following glucose levels and step counts from the last 5 hours:
+        Please provide a detailed risk assessment based on the following glucose levels and step counts from the last 5 hours. Consider both glucose levels and the number of steps in your assessment:
+        
         $glucoseData
+        
+        The response should include:
+        - An overall risk level (e.g., Low, Medium, High)
+        - A brief explanation of why this risk level was determined
+        - Recommendations for the patient to manage their glucose levels
+        The response should be in the following format:
+        Risk Level: [Low/Medium/High]
+        Explanation: [Brief explanation of why this risk level was determined]
+        Recommendations: [Recommendations for the patient to manage their glucose levels and improve their condition]
+        
         ПИШИ ТОЛЬКО НА РУССКОМ
+        ПИШИ КРАТКО, НО НЕ СЛИШКОМ
+        НЕ ИСПОЛЬЗУЙ MARKDOWN, ПИШИ ВСЕ СТРОКОЙ БЕЗ ФОРМАТИРОВАНИЯ
+        МНЕ НУЖЕН СУХОЙ ВЫВОД
+        НЕ ОБОБЩАЙ, СДЕЛАЙ ВЫВОД ТОЛЬКО НА ПРЕДСТАВЛЕННЫЕ ДАННЫЕ
+        НЕ ПИШИ ПРО ПАЦИЕНТА, РЕЧЬ ИДЕТ ПРО МЕНЯ
     """.trimIndent()
 }
 
