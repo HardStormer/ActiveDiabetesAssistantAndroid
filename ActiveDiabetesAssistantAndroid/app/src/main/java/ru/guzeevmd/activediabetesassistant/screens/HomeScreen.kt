@@ -260,31 +260,34 @@ fun formatAiResponse(response: String): AnnotatedString {
     }
 }
 fun generatePrompt(glucoseInfoSet: Set<GlucoseInfoViewModel>): String {
-    val glucoseData = glucoseInfoSet
+    val recentGlucoseData = glucoseInfoSet
         .filter { it.createdAt >= LocalDateTime.now().minusHours(5).toString() }
         .joinToString(separator = "\n") {
-        "ID: ${it.id}, Date: ${it.createdAt}, Glucose: ${it.glucoseData}, Steps: ${it.stepsCount ?: 0}"
-    }
+            "ID: ${it.id}, Дата: ${it.createdAt}, Глюкоза: ${it.glucoseData}, Шаги: ${it.stepsCount ?: 0}"
+        }
+
     return """
-        Please provide a detailed risk assessment based on the following glucose levels and step counts from the last 5 hours. Consider both glucose levels and the number of steps in your assessment:
+        Пожалуйста, оцените риск на основе следующих данных об уровнях глюкозы и количестве шагов за последние 5 часов. Учитывайте оба показателя:
         
-        $glucoseData
+        $recentGlucoseData
         
-        The response should include:
-        - An overall risk level (e.g., Low, Medium, High)
-        - A brief explanation of why this risk level was determined
-        - Recommendations for the patient to manage their glucose levels
-        The response should be in the following format:
-        Risk Level: [Low/Medium/High]
-        Explanation: [Brief explanation of why this risk level was determined]
-        Recommendations: [Recommendations for the patient to manage their glucose levels and improve their condition]
+        Ответ должен включать:
+        - Уровень риска (Низкий, Средний, Высокий)
+        - Обоснование уровня риска
+        - Рекомендации по управлению уровнями глюкозы
         
-        ПИШИ ТОЛЬКО НА РУССКОМ
-        ПИШИ КРАТКО, НО НЕ СЛИШКОМ
-        НЕ ИСПОЛЬЗУЙ MARKDOWN, ПИШИ ВСЕ СТРОКОЙ БЕЗ ФОРМАТИРОВАНИЯ
-        МНЕ НУЖЕН СУХОЙ ВЫВОД
-        НЕ ОБОБЩАЙ, СДЕЛАЙ ВЫВОД ТОЛЬКО НА ПРЕДСТАВЛЕННЫЕ ДАННЫЕ
-        НЕ ПИШИ ПРО ПАЦИЕНТА, РЕЧЬ ИДЕТ ПРО МЕНЯ
+        Формат ответа:
+        Уровень риска: [Низкий/Средний/Высокий]
+        Обоснование: [Краткое объяснение выбранного уровня риска]
+        Рекомендации: [Советы по управлению уровнями глюкозы и улучшению состояния]
+        
+        ВАЖНО:
+        - Пишите только на русском языке
+        - Ответ должен быть кратким, но содержательным
+        - Не используйте форматирование (Markdown)
+        - Ответ должен быть лаконичным
+        - Анализируйте только предоставленные данные
+        - Обращайтесь ко мне, а не к пациенту
     """.trimIndent()
 }
 
