@@ -1,5 +1,6 @@
 package ru.guzeevmd.activediabetesassistant.screens
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,13 +9,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,14 +31,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import kotlinx.serialization.json.JsonElement
 import ru.guzeevmd.activediabetesassistant.cards.TimingDiagram
 import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClient
 import ru.guzeevmd.activediabetesassistant.data.models.GlucoseInfoViewModel
 import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 
+@kotlinx.serialization.Serializable
+data class ChatGptResponse(
+    val id: String,
+    val objectRes: String,
+    val created: Int,
+    val model: String,
+    val choices: List<Choice>
+)
+
+@kotlinx.serialization.Serializable
+data class Choice(
+    val text: String,
+    val index: Int,
+    val logprobs: JsonElement?,
+    val finish_reason: String
+)
 @Composable
 fun HomeScreen(navController: NavController, authToken: String) {
+    val authAiToken = ""
     val glucoseInfoSet = remember { mutableStateOf(setOf<GlucoseInfoViewModel>()) }
     val exSet = remember { mutableStateOf(setOf<Exception>()) }
     var isDataGetted by remember { mutableStateOf(false) }
@@ -45,6 +69,10 @@ fun HomeScreen(navController: NavController, authToken: String) {
     var riskExplanation by remember { mutableStateOf("") }
     var riskRecommendation by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
+
+    var showAiPopup by remember { mutableStateOf(false) }
+    var aiResponse by remember { mutableStateOf("") }
+    var isAiLoading by remember { mutableStateOf(false) }
 
     NavigationBarMediumTheme {
         Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { paddingValues ->
@@ -102,6 +130,15 @@ fun HomeScreen(navController: NavController, authToken: String) {
 
                             Spacer(modifier = Modifier.height(8.dp))
 
+                            Button(
+                                onClick = { showAiPopup = true },
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            ) {
+                                Text("Прогноз Рисков Гликемии с Поддержкой ИИ")
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -126,9 +163,83 @@ fun HomeScreen(navController: NavController, authToken: String) {
                     }
                 }
             }
+
+            if (showAiPopup) {
+                AiRiskPredictionPopup(
+                    onDismiss = { showAiPopup = false },
+                    glucoseInfoSet = glucoseInfoSet.value,
+                    authToken = authAiToken,
+                    aiResponse = aiResponse,
+                    isAiLoading = isAiLoading,
+                    onAiResponseReceived = { response -> aiResponse = response },
+                    onLoadingStateChange = { isLoading -> isAiLoading = isLoading }
+                )
+            }
         }
     }
 }
+
+@Composable
+fun AiRiskPredictionPopup(
+    onDismiss: () -> Unit,
+    glucoseInfoSet: Set<GlucoseInfoViewModel>,
+    authToken: String,
+    aiResponse: String,
+    isAiLoading: Boolean,
+    onAiResponseReceived: (String) -> Unit,
+    onLoadingStateChange: (Boolean) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(dismissOnClickOutside = true)) {
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+//            elevation = 24.dp
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Прогноз Рисков Гликемии с Поддержкой ИИ", style = MaterialTheme.typography.bodyMedium)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (isAiLoading) {
+                        CircularProgressIndicator()
+                    } else {
+                        Text(text = aiResponse, style = MaterialTheme.typography.bodyMedium)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(onClick = onDismiss) {
+                        Text("Закрыть")
+                    }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(true) {
+        onLoadingStateChange(true)
+        val prompt = generatePrompt(glucoseInfoSet)
+        val aiResponse = "Ai not configured"
+        onAiResponseReceived(aiResponse)
+        onLoadingStateChange(false)
+    }
+}
+fun generatePrompt(glucoseInfoSet: Set<GlucoseInfoViewModel>): String {
+    val glucoseData = glucoseInfoSet.joinToString(separator = "\n") {
+        "ID: ${it.id}, Date: ${it.createdAt}, Glucose: ${it.glucoseData}, Steps: ${it.stepsCount ?: 0}"
+    }
+    return """
+        Provide a detailed risk assessment based on the following glucose levels and step counts from the last 5 hours:
+        $glucoseData
+    """.trimIndent()
+}
+
 
 fun calculateRisk(glucoseInfoSet: Set<GlucoseInfoViewModel>): Triple<String, String, String> {
     if (glucoseInfoSet.isEmpty()) return Triple("Недостаточно данных", "", "")
