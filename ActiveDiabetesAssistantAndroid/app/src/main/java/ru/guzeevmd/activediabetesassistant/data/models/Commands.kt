@@ -17,7 +17,7 @@ data class CheckTokenQuery(
 @Serializable
 data class AskAiCommand(
     val prompt: String,
-    val systemPrompt: Int?
+    val systemPrompt: String?
 )
 @Serializable
 data class CreateGlucoseInfoCommand(

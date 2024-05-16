@@ -37,6 +37,7 @@ import androidx.navigation.NavController
 import kotlinx.serialization.json.JsonElement
 import ru.guzeevmd.activediabetesassistant.cards.TimingDiagram
 import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClient
+import ru.guzeevmd.activediabetesassistant.data.models.AskAiCommand
 import ru.guzeevmd.activediabetesassistant.data.models.GlucoseInfoViewModel
 import ru.guzeevmd.activediabetesassistant.ui.theme.NavigationBarMediumTheme
 
@@ -224,9 +225,13 @@ fun AiRiskPredictionPopup(
 
     LaunchedEffect(true) {
         onLoadingStateChange(true)
-        val prompt = generatePrompt(glucoseInfoSet)
-        val aiResponse = "Ai not configured"
-        onAiResponseReceived(aiResponse)
+        val aiCommand = AskAiCommand(
+            prompt = generatePrompt(glucoseInfoSet),
+            systemPrompt = generateSystemPrompt(glucoseInfoSet)
+        )
+        val client = DiabetesAssistantApiClient(null)
+        val aiResponseFromClient = client.askAi(aiCommand)
+        onAiResponseReceived(aiResponseFromClient)
         onLoadingStateChange(false)
     }
 }
@@ -237,7 +242,12 @@ fun generatePrompt(glucoseInfoSet: Set<GlucoseInfoViewModel>): String {
     return """
         Provide a detailed risk assessment based on the following glucose levels and step counts from the last 5 hours:
         $glucoseData
+        ПИШИ ТОЛЬКО НА РУССКОМ
     """.trimIndent()
+}
+
+fun generateSystemPrompt(glucoseInfoSet: Set<GlucoseInfoViewModel>): String {
+    return "You are medic".trimIndent()
 }
 
 

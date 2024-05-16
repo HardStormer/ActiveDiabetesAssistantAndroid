@@ -136,7 +136,7 @@ class DiabetesAssistantApiClient(private val authToken: String?) {
             else -> {
                 val error = parseErrorResponse(response)
                 handleApiError(response.status, error)
-                "AI ERROR"
+                "AI ERROR (${response.status}, ${response.bodyAsText()})"
             }
         }
     }
