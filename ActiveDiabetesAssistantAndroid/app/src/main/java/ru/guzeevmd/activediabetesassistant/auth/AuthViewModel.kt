@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import ru.guzeevmd.activediabetesassistant.data.client.DiabetesAssistantApiClient
+import ru.guzeevmd.activediabetesassistant.data.models.CheckTokenQuery
 import ru.guzeevmd.activediabetesassistant.data.models.LoginUserCommand
 import ru.guzeevmd.activediabetesassistant.data.models.RegisterUserCommand
 
@@ -41,7 +42,27 @@ class AuthViewModel(private val repository: DiabetesAssistantApiClient, val cont
     // Retrieve JWT Token from SharedPreferences
     fun getJwtToken(): String? {
         val sharedPreferences = contextInner.getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getString("jwt_token", null)
+        val token = sharedPreferences.getString("jwt_token", null)
+        var result = false
+        viewModelScope.launch {
+            try{
+                val command = CheckTokenQuery(token.toString())
+                val resultInner = repository.checkToken(command)
+                if (resultInner != null) {
+                    result = resultInner
+                }
+            }
+            catch (e: Exception){
+                result = false
+            }
+        }
+        if (result){
+            return token
+        }
+        else{
+            clearJwtToken()
+            return null
+        }
     }
 
     fun registerUser(credentials: RegisterUserCommand) {

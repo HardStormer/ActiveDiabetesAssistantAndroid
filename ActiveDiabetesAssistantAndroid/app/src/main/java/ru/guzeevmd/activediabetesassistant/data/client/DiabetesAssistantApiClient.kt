@@ -26,6 +26,7 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.InternalAPI
 import kotlinx.serialization.json.Json
+import ru.guzeevmd.activediabetesassistant.data.models.CheckTokenQuery
 import ru.guzeevmd.activediabetesassistant.data.models.CreateGlucoseInfoCommand
 import ru.guzeevmd.activediabetesassistant.data.models.CreateMyPersonInfoCommand
 import ru.guzeevmd.activediabetesassistant.data.models.DeleteGlucoseInfoCommand
@@ -104,6 +105,22 @@ class DiabetesAssistantApiClient(private val authToken: String?) {
             HttpStatusCode.NotFound -> Log.e(tag, "Not Found: ${(error as? ApiError.Problem)?.details?.detail}")
             HttpStatusCode.InternalServerError -> Log.e(tag, "Internal Server Error: ${(error as? ApiError.Problem)?.details?.detail}")
             else -> Log.e(tag, "Error ${status.value}: ${(error as? ApiError.Problem)?.details?.detail}")
+        }
+    }
+
+    suspend fun checkToken(query: CheckTokenQuery): Boolean? {
+        val response = client.get("$baseUrl/User/CheckToken")
+        return when {
+            response.status.isSuccess() -> {
+                val result = response.bodyAsText().toBoolean()
+                Log.i("DiabetesApiClient", "Token check result: $result")
+                result
+            }
+            else -> {
+                val error = parseErrorResponse(response)
+                handleApiError(response.status, error)
+                null
+            }
         }
     }
 

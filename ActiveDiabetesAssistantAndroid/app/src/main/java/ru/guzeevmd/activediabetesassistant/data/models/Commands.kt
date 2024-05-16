@@ -10,6 +10,11 @@ data class ListResponse<T>(
 )
 
 @Serializable
+data class CheckTokenQuery(
+    val token: String,
+)
+
+@Serializable
 data class CreateGlucoseInfoCommand(
     val glucoseData: Float,
     val stepsCount: Int?
