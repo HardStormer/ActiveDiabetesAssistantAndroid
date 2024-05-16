@@ -31,19 +31,24 @@ fun AuthScreen(viewModel: AuthViewModel) {
         content = { paddingValues ->
             when (authState) {
                 is AuthState.Idle -> {
-                    LoginScreen(viewModel, snackbarHostState, paddingValues)
+                    NavigationBarMediumTheme {
+                        LoginScreen(viewModel, snackbarHostState, paddingValues)
+                    }
                 }
                 is AuthState.Loading -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ){
-                        CircularProgressIndicator(
-                            modifier = Modifier.padding(vertical = 20.dp)
-                        )
+
+                    NavigationBarMediumTheme {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.padding(vertical = 20.dp)
+                            )
+                        }
                     }
                 }
                 is Authenticated -> {
@@ -59,7 +64,15 @@ fun AuthScreen(viewModel: AuthViewModel) {
                 }
                 is AuthState.Error -> {
                     val errorMessage = (authState as AuthState.Error).message
-                    LoginScreen(viewModel, snackbarHostState, paddingValues, errorMessage = errorMessage)
+
+                    NavigationBarMediumTheme {
+                        LoginScreen(
+                            viewModel,
+                            snackbarHostState,
+                            paddingValues,
+                            errorMessage = errorMessage
+                        )
+                    }
                 }
             }
         })
