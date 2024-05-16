@@ -26,6 +26,7 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.InternalAPI
 import kotlinx.serialization.json.Json
+import ru.guzeevmd.activediabetesassistant.data.models.AskAiCommand
 import ru.guzeevmd.activediabetesassistant.data.models.CheckTokenQuery
 import ru.guzeevmd.activediabetesassistant.data.models.CreateGlucoseInfoCommand
 import ru.guzeevmd.activediabetesassistant.data.models.CreateMyPersonInfoCommand
@@ -51,7 +52,7 @@ sealed class ApiError {
 
 
 class DiabetesAssistantApiClient(private val authToken: String?) {
-    private val baseUrl = "https://hardstormer-activediabetesassistant-b648.twc1.net"
+    private val baseUrl = "https://hardstormer-activediabetesassistant-8de0.twc1.net"
 
     private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
@@ -123,7 +124,22 @@ class DiabetesAssistantApiClient(private val authToken: String?) {
             }
         }
     }
-
+    suspend fun askAi(command: AskAiCommand): String {
+        val response = client.post("$baseUrl/Ai/Ask") {
+            contentType(ContentType.Application.Json)
+            setBody(command)
+        }
+        return when {
+            response.status.isSuccess() -> {
+                response.bodyAsText()
+            }
+            else -> {
+                val error = parseErrorResponse(response)
+                handleApiError(response.status, error)
+                "AI ERROR"
+            }
+        }
+    }
     suspend fun getMyUser(): UserViewModel? {
         val response = client.get("$baseUrl/User/GetMy")
         return when {

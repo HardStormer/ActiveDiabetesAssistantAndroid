@@ -15,6 +15,11 @@ data class CheckTokenQuery(
 )
 
 @Serializable
+data class AskAiCommand(
+    val prompt: String,
+    val systemPrompt: Int?
+)
+@Serializable
 data class CreateGlucoseInfoCommand(
     val glucoseData: Float,
     val stepsCount: Int?
